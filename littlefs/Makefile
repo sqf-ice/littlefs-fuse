@@ -1,4 +1,7 @@
-TARGET = lfs
+TARGET = lfs.a
+ifneq ($(wildcard test.c main.c),)
+override TARGET = lfs
+endif
 
 CC ?= gcc
 AR ?= ar
@@ -23,6 +26,7 @@ override CFLAGS += -m$(WORD)
 endif
 override CFLAGS += -I.
 override CFLAGS += -std=c99 -Wall -pedantic
+override CFLAGS += -Wshadow -Wunused-parameter -Wjump-misses-init -Wsign-compare
 
 
 all: $(TARGET)
@@ -36,7 +40,9 @@ size: $(OBJ)
 test: test_format test_dirs test_files test_seek test_truncate \
 	test_entries test_interspersed test_alloc test_paths test_attrs \
 	test_move test_orphan test_corrupt
+	@rm test.c
 test_%: tests/test_%.sh
+
 ifdef QUIET
 	@./$< | sed -n '/^[-=]/p'
 else
@@ -45,7 +51,7 @@ endif
 
 -include $(DEP)
 
-$(TARGET): $(OBJ)
+lfs: $(OBJ)
 	$(CC) $(CFLAGS) $^ $(LFLAGS) -o $@
 
 %.a: $(OBJ)
